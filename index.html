@@ -9,7 +9,7 @@
 <body>
   <div class="container">
     <h1>Blue-Hat Crime — Explore the Evidence</h1>
-    <p>Move the sliders and watch the town of 1,000 people. Orange rings mark the people the witness points to. The small black dot is the real guilty person. Use these counts to estimate how likely it is that John is guilty.</p>
+    <p>Move the sliders and watch the town of 1,000 people. Orange rings mark the people the witness points to. The small red dot at the beginning is the real guilty person. Use these counts to estimate how likely it is that John is guilty.</p>
 
     <div class="row">
       <div class="controls">
@@ -120,9 +120,15 @@
           }
           if (isGuilty) {
             ctx.beginPath();
-            ctx.arc(x,y,Math.min(cellW,cellH)*0.06,0,Math.PI*2);
-            ctx.fillStyle = "#000";
+            ctx.arc(x, y, Math.min(cellW, cellH) * 0.12, 0, Math.PI * 2);
+            ctx.shadowColor = "#ff0000";
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = "#ff0000";
+            ctx.strokeStyle = "#ff0000";
+            ctx.lineWidth = 3;
             ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
           }
           idx++;
         }
