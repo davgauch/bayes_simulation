@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Blue-Hat Crime — Interactive</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Blue-Hat Crime — Explore the Evidence</h1>
+    <p>Move the sliders and watch the town of 1,000 people. Orange rings mark the people the witness points to. The small black dot is the real guilty person. Use these counts to estimate how likely it is that John is guilty.</p>
+
+    <div class="row">
+      <div class="controls">
+        <label>How common are blue hats? <span id="baseRatePct">10%</span></label>
+        <input id="baseRate" type="range" min="1" max="50" value="10" />
+        <label>How often is the witness correct when the person actually has a blue hat? <span id="tpPct">80%</span></label>
+        <input id="tp" type="range" min="50" max="100" value="80" />
+        <label>How often does the witness say "blue" when the person does NOT have a blue hat? <span id="fpPct">8%</span></label>
+        <input id="fp" type="range" min="0" max="50" value="8" />
+        <div class="note">
+          <strong>What to do:</strong> First make your best guess for John’s guilt (a number). Then use the simulator to find counts and a number you can defend. Enter that number in the quiz after this activity.
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="big">Population: 1,000 people</div>
+        <div id="reported" style="margin-top:8px">People the witness points to: <strong id="reportedNum">—</strong></div>
+        <div id="chance" style="margin-top:6px">Chance the guilty person is among them: <strong id="posteriorPct">—</strong></div>
+      </div>
+    </div>
+
+    <canvas id="grid" width="680" height="380" aria-label="Population grid"></canvas>
+
+    <div class="footer">
+      Adjust sliders to explore contrasting cases. Do not look up formulas — try to justify the number you will submit in the quiz.
+    </div>
+
+    <script>
+    const N = 1000;
+    const canvas = document.getElementById('grid');
+    const ctx = canvas.getContext('2d');
+
+    const baseRateEl = document.getElementById('baseRate');
+    const tpEl = document.getElementById('tp');
+    const fpEl = document.getElementById('fp');
+    const baseRatePct = document.getElementById('baseRatePct');
+    const tpPct = document.getElementById('tpPct');
+    const fpPct = document.getElementById('fpPct');
+    const reportedNum = document.getElementById('reportedNum');
+    const posteriorPct = document.getElementById('posteriorPct');
+
+    function drawGrid(baseRatePercent, tpPercent, fpPercent) {
+      const base = baseRatePercent/100;
+      const tp = tpPercent/100;
+      const fp = fpPercent/100;
+      const cols = 50;
+      const rows = 20;
+      const cellW = canvas.width/cols;
+      const cellH = canvas.height/rows;
+
+      // deterministic owner assignment: first K indices are owners
+      const numOwners = Math.round(N * base);
+      const owners = new Set();
+      for (let i=0;i<numOwners;i++) owners.add(i);
+      const guiltyIndex = 0; // guilty is index 0, assume guilty has blue hat (for scenario)
+      const guiltyHasBlue = owners.has(guiltyIndex) ? 1 : 0;
+
+      // counts
+      const innocents = N - 1;
+      const ownersAmongInnocents = Math.max(0, numOwners - guiltyHasBlue);
+      const nonOwnersAmongInnocents = innocents - ownersAmongInnocents;
+      const reportedBlueFromGuilty = tp * guiltyHasBlue; // expected
+      const reportedBlueFromOwnersInnocents = ownersAmongInnocents * tp;
+      const reportedBlueFromNonOwnersInnocents = nonOwnersAmongInnocents * fp;
+      const reportedBlueTotal = reportedBlueFromGuilty + reportedBlueFromOwnersInnocents + reportedBlueFromNonOwnersInnocents;
+
+      // posterior probability = reportedBlueFromGuilty / reportedBlueTotal
+      const posterior = reportedBlueTotal>0 ? (reportedBlueFromGuilty / reportedBlueTotal) : 0;
+
+      reportedNum.textContent = Math.round(reportedBlueTotal);
+      posteriorPct.textContent = (posterior*100).toFixed(3) + " %";
+
+      // draw dots
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      let idx = 0;
+      for (let r=0;r<rows;r++) {
+        for (let c=0;c<cols;c++) {
+          if (idx>=N) break;
+          const x = c*cellW + cellW*0.5;
+          const y = r*cellH + cellH*0.5;
+          const owner = owners.has(idx);
+          const isGuilty = (idx === guiltyIndex);
+          // base dot
+          ctx.beginPath();
+          ctx.arc(x,y,Math.min(cellW,cellH)*0.18,0,Math.PI*2);
+          ctx.closePath();
+          ctx.fillStyle = owner ? "#1f77b4" : "#eee";
+          ctx.fill();
+          // determine reported status deterministically by ranking: mark first K among owners and non-owners
+          let reported = false;
+          if (isGuilty) {
+            reported = (tp > 0.5);
+          } else {
+            if (owner) {
+              const rank = idx; // among owners  (0..numOwners-1)
+              reported = (rank < Math.round(reportedBlueFromOwnersInnocents));
+            } else {
+              const nonOwnerIndex = idx - numOwners;
+              reported = (nonOwnerIndex < Math.round(reportedBlueFromNonOwnersInnocents));
+            }
+          }
+          if (reported) {
+            ctx.beginPath();
+            ctx.arc(x,y,Math.min(cellW,cellH)*0.28,0,Math.PI*2);
+            ctx.strokeStyle = "#ff7f0e";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+          if (isGuilty) {
+            ctx.beginPath();
+            ctx.arc(x,y,Math.min(cellW,cellH)*0.06,0,Math.PI*2);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+          }
+          idx++;
+        }
+        if (idx>=N) break;
+      }
+    }
+
+    function update() {
+      const base = parseInt(baseRateEl.value);
+      const tp = parseInt(tpEl.value);
+      const fp = parseInt(fpEl.value);
+      baseRatePct.textContent = base + "%";
+      tpPct.textContent = tp + "%";
+      fpPct.textContent = fp + "%";
+      drawGrid(base,tp,fp);
+    }
+
+    baseRateEl.addEventListener('input', update);
+    tpEl.addEventListener('input', update);
+    fpEl.addEventListener('input', update);
+
+    update();
+    </script>
+  </div>
+</body>
+</html>
