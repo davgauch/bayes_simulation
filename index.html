@@ -23,12 +23,6 @@
           <strong>What to do:</strong> First make your best guess for John’s guilt (a number). Then use the simulator to find counts and a number you can defend. Enter that number in the quiz after this activity.
         </div>
       </div>
-
-      <div class="summary">
-        <div class="big">Population: 1,000 people</div>
-        <div id="reported" style="margin-top:8px">People the witness points to: <strong id="reportedNum">—</strong></div>
-        <div id="chance" style="margin-top:6px">Chance the guilty person is among them: <strong id="posteriorPct">—</strong></div>
-      </div>
     </div>
 
     <canvas id="grid" width="680" height="380" aria-label="Population grid"></canvas>
@@ -48,8 +42,6 @@
     const baseRatePct = document.getElementById('baseRatePct');
     const tpPct = document.getElementById('tpPct');
     const fpPct = document.getElementById('fpPct');
-    const reportedNum = document.getElementById('reportedNum');
-    const posteriorPct = document.getElementById('posteriorPct');
 
     function drawGrid(baseRatePercent, tpPercent, fpPercent) {
       const base = baseRatePercent/100;
@@ -79,8 +71,7 @@
       // posterior probability = reportedBlueFromGuilty / reportedBlueTotal
       const posterior = reportedBlueTotal>0 ? (reportedBlueFromGuilty / reportedBlueTotal) : 0;
 
-      reportedNum.textContent = Math.round(reportedBlueTotal);
-      posteriorPct.textContent = (posterior*100).toFixed(3) + " %";
+        // Removed answer-revealing elements and references to deleted DOM nodes
 
       // draw dots
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -104,8 +95,13 @@
             reported = (tp > 0.5);
           } else {
             if (owner) {
-              const rank = idx; // among owners  (0..numOwners-1)
-              reported = (rank < Math.round(reportedBlueFromOwnersInnocents));
+              // If tpPercent is 100, all owners should be circled
+              if (tpPercent === 100) {
+                reported = true;
+              } else {
+                const rank = idx; // among owners  (0..numOwners-1)
+                reported = (rank < Math.round(reportedBlueFromOwnersInnocents));
+              }
             } else {
               const nonOwnerIndex = idx - numOwners;
               reported = (nonOwnerIndex < Math.round(reportedBlueFromNonOwnersInnocents));
