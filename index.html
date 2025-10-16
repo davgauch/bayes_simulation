@@ -9,7 +9,7 @@
 <body>
   <div class="container">
     <h1>Blue-Hat Crime — Explore the Evidence</h1>
-    <p>Move the sliders and watch the town of 1,000 people. Orange rings mark the people the witness points to. The small red dot at the beginning is the real guilty person. Use these counts to estimate how likely it is that John is guilty.</p>
+    <p>Move the sliders and watch what happens in the town of 1,000 people. Orange rings mark the people identified by the witness. The small red dot at the start represents the real guilty person. Use the counts shown in the simulation to estimate how likely it is that John is guilty, given that the witness said the murderer wore a blue hat.</p>
 
     <div class="row">
       <div class="controls">
@@ -20,7 +20,7 @@
         <label>How often does the witness say "blue" when the person does NOT have a blue hat? <span id="fpPct">8%</span></label>
         <input id="fp" type="range" min="0" max="50" value="8" />
         <div class="note">
-          <strong>What to do:</strong> First make your best guess for John’s guilt (a number). Then use the simulator to find counts and a number you can defend. Enter that number in the quiz after this activity.
+          <strong>What to do:</strong> Adjust the sliders and observe how the counts of people change. Using what you obesrve, find the probability of John's guilt that is reasonable to you.
         </div>
       </div>
     </div>
@@ -28,7 +28,7 @@
     <canvas id="grid" width="680" height="380" aria-label="Population grid"></canvas>
 
     <div class="footer">
-      Adjust sliders to explore contrasting cases. Do not look up formulas — try to justify the number you will submit in the quiz.
+      Do not look up formulas! Enter your final number in the quiz and briefly explain your reasoning.
     </div>
 
     <script>
